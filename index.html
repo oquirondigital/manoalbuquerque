@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
     --lagoon: #0F3D3E;
@@ -83,71 +84,66 @@
     margin-top: 20px;
     font-size: 12.5px;
     color: var(--ink-soft);
+    align-items: center;
   }
   .meta-row span b{ color: var(--lagoon); font-weight: 700; }
+  .live-dot{
+    display:inline-flex; align-items:center; gap: 6px;
+  }
+  .live-dot .pulse{
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lagoon);
+    box-shadow: 0 0 0 0 rgba(15,61,62,0.5);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(15,61,62,0.45); }
+    70%{ box-shadow: 0 0 0 7px rgba(15,61,62,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(15,61,62,0); }
+  }
+  .refresh-btn{
+    font-size: 12px; font-weight: 600;
+    background: #fff; color: var(--lagoon);
+    border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .refresh-btn:hover{ border-color: var(--lagoon); }
 
-  /* ---------- Board ---------- */
+  /* ---------- Grid ---------- */
   main{
     padding: 24px clamp(16px, 4vw, 48px) 60px;
   }
-  .board{
-    display: flex;
+  .filters{
+    display:flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .filter-btn{
+    font-size: 12.5px; font-weight: 600;
+    background: #fff; color: var(--ink-soft);
+    border: 1px solid var(--line);
+    padding: 6px 13px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .filter-btn.active{
+    background: var(--lagoon); color: #fff; border-color: var(--lagoon);
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
     gap: 16px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    align-items: flex-start;
-  }
-  .column{
-    background: rgba(255,250,242,0.55);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    min-width: 276px;
-    max-width: 276px;
-    flex: 0 0 auto;
-    padding: 14px;
-    min-height: 140px;
-  }
-  .column.dragover{
-    outline: 2px dashed var(--terracotta);
-    outline-offset: -4px;
-    background: rgba(198,90,58,0.06);
-  }
-  .column-head{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom: 12px;
-    padding: 0 2px;
-  }
-  .column-head h2{
-    font-size: 12.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
-    margin: 0;
-    color: var(--lagoon);
-  }
-  .col-count{
-    font-size: 11.5px;
-    background: #fff;
-    border-radius: 20px;
-    padding: 2px 9px;
-    color: var(--ink-soft);
-    border: 1px solid var(--line);
-    font-weight: 600;
   }
 
   /* ---------- Card ---------- */
   .card{
     border-radius: 14px;
     padding: 16px 17px 15px;
-    margin-bottom: 10px;
     box-shadow: var(--shadow);
-    cursor: grab;
+    cursor: pointer;
     color: #fff;
     transition: transform .15s ease, box-shadow .15s ease;
   }
   .card:hover{ transform: translateY(-2px) scale(1.01); }
-  .card:active{ cursor: grabbing; }
-  .card.dragging{ opacity: 0.4; }
   .card.tier-lagoon{ background: var(--lagoon); }
   .card.tier-terracotta{ background: var(--terracotta); }
   .card.tier-lilac{ background: var(--lilac); }
@@ -214,6 +210,17 @@
     border-top: 1px solid rgba(255,255,255,0.22);
     padding-top: 9px;
   }
+
+  /* ---------- Empty / error states ---------- */
+  .board-msg{
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 40px 10px;
+    text-align: center;
+    width: 100%;
+  }
+  .board-msg.error{ color: var(--terracotta-ink); }
+  .board-msg a{ color: var(--lagoon); }
 
   /* ---------- Modal ---------- */
   .overlay{
@@ -342,233 +349,198 @@
 <header>
   <p class="eyebrow">Oquíron Digital · Mano Albuquerque [Leads]</p>
   <h1>Vaga — Auxiliar de Cabeleireiro</h1>
-  <p class="subhead">Candidatos recebidos via formulário de leads no Instagram, anúncio "AD 01 – Auxiliar de Cabeleireiro", segmentação 00 Chapecó 25KM. Clique em um card para ver todas as respostas. Arraste entre colunas para organizar o funil.</p>
+  <p class="subhead">Candidatos recebidos via formulário de leads no Instagram, anúncio "AD 01 – Auxiliar de Cabeleireiro", segmentação 00 Chapecó 25KM. Clique em um card para ver todas as respostas.</p>
   <div class="meta-row">
-    <span><b>10</b> candidatos</span>
-    <span>Período: <b>21/08 – 24/08/2026</b></span>
-    <span>Origem: <b>Instagram</b></span>
+    <span class="live-dot"><span class="pulse"></span> <span id="statusText">Conectando à planilha…</span></span>
+    <span id="countText"></span>
+    <button class="refresh-btn" id="refreshBtn">↻ Atualizar agora</button>
   </div>
 </header>
 
 <main>
-  <div class="board" id="board"></div>
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="todos">Todos</button>
+    <button class="filter-btn" data-filter="atencao">Precisam de atenção</button>
+  </div>
+  <div class="grid" id="board"></div>
 </main>
 
-<footer>Organize arrastando os cards — as posições não são salvas ao recarregar a página.</footer>
+<footer id="footerText">Página só para visualização — os leads são carregados direto da planilha, sem edição por aqui.</footer>
 
 <div class="overlay" id="overlay">
   <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
 </div>
 
 <script>
-const candidatos = [
-  {
-    id: 1,
-    nome: "KAH | Especialista em Mechas",
-    data: "24/08/2026 11:01",
-    telefoneDisplay: "+55 49 99821-8758",
-    telefoneWa: "5549998218758",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "Ok aguardo retorno",
-    skillScore: [3,3],
-    flag: null,
-    tier: "lagoon"
-  },
-  {
-    id: 2,
-    nome: "ηαηίӄα (nome do perfil — sem nome completo legível)",
-    data: "24/08/2026 01:42",
-    telefoneDisplay: "+55 49 98866-7582",
-    telefoneWa: "5549988667582",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sei fazer apenas escovas básicas",
-    tempoArea: "Menos de 6 meses",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tarde e noite",
-    relato: "Um pouco demorada... Nada que a prática não melhore",
-    skillScore: [3,2],
-    flag: null,
-    tier: "lilac"
-  },
-  {
-    id: 3,
-    nome: "Janete Alves",
-    data: "23/08/2026 22:54",
-    telefoneDisplay: "+55 49 98904-2204",
-    telefoneWa: "5549989042204",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tarde e noite",
-    relato: "Fiz curso n embeleze e trabalhei muito com cabelo sou especialista em alisamento",
-    skillScore: [3,3],
-    flag: null,
-    tier: "lagoon"
-  },
-  {
-    id: 4,
-    nome: "Leila Mazzetti / Cabelo e Estética",
-    data: "23/08/2026 21:08",
-    telefoneDisplay: "+55 46 98838-4224",
-    telefoneWa: "5546988384224",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "Olá, me chamo Leila, já trabalho na área há 8 anos, dos quais 4 anos aqui em Chapecó (Salão Aime Cosméticos).",
-    skillScore: [3,3],
-    flag: null,
-    tier: "lagoon"
-  },
-  {
-    id: 5,
-    nome: "Pablo Silva",
-    data: "23/08/2026 21:01",
-    telefoneDisplay: "+55 91 98832-6471",
-    telefoneWa: "5591988326471",
-    cidade: "Chapeco",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Ainda não trabalhei como auxiliar, mas tenho experiência prática",
-    lavagem: "Tenho conhecimento básico",
-    escova: "Sei fazer apenas escovas básicas",
-    tempoArea: "De 1 a 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tarde e noite",
-    relato: "Quando morava em Belém, eu fazia alisamentos, corte e algumas colorações. Usava esse meio para custear a faculdade. Hoje estou um pouquinho próximo do ramo e gostaria de aprender e desenvolver mais.",
-    skillScore: [1,2],
-    flag: null,
-    tier: "lilac"
-  },
-  {
-    id: 6,
-    nome: "Inaiara Ruschel",
-    data: "23/08/2026 20:59",
-    telefoneDisplay: "+55 49 99839-8881",
-    telefoneWa: "5549998398881",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Tenho conhecimento básico",
-    escova: "Sei fazer apenas escovas básicas",
-    tempoArea: "De 6 meses a 1 ano",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "Paoline, Nanda, marcia",
-    skillScore: [2,2],
-    flag: null,
-    tier: "lilac"
-  },
-  {
-    id: 7,
-    nome: "Brenda Vieira Jarosz",
-    data: "22/08/2026 20:47",
-    telefoneDisplay: "+55 49 98802-6226",
-    telefoneWa: "5549988026226",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "De 1 a 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "Trabalhando em escovarias desenvolvimento as habilidades de escovas em diferentes tipos de cabelos e diferentes modalidades como a escova modelada na própria escova",
-    skillScore: [3,3],
-    flag: null,
-    tier: "lagoon"
-  },
-  {
-    id: 8,
-    nome: "Joy Guillén",
-    data: "22/08/2026 14:06",
-    telefoneDisplay: "+55 4988923198",
-    telefoneWa: "554988923198",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Manhã e tarde",
-    relato: "Eu sou cabeleireiro venezuelano com 20 anos de experiência e trabalhei a 2 anos aqui no Chapecó no salão de Paoline Studio hair",
-    skillScore: [3,3],
-    flag: "Número com 10 dígitos após o DDI (falta um dígito, possivelmente o 9) — confirme antes de chamar no WhatsApp.",
-    tier: "terracotta"
-  },
-  {
-    id: 9,
-    nome: "Lia Laleska",
-    data: "22/08/2026 13:15",
-    telefoneDisplay: "49 98412-7450 (sem +55 no dado original)",
-    telefoneWa: "5549984127450",
-    cidade: "Xanxerê",
-    foraDeChapeco: true,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "Atualmente trabalho já na área mas estou. Pensando em mudar justamente para essa cidade",
-    skillScore: [3,3],
-    flag: "Mora em Xanxerê, fora do raio de 25km de Chapecó configurado no anúncio — confirme se realmente pretende se mudar antes de avançar.",
-    tier: "terracotta"
-  },
-  {
-    id: 10,
-    nome: "Biianca Barbara",
-    data: "21/08/2026 22:19",
-    telefoneDisplay: "+55 499989044201",
-    telefoneWa: "55499989044201",
-    cidade: "Chapecó",
-    foraDeChapeco: false,
-    experienciaAuxiliar: "Sim, já trabalhei na função",
-    lavagem: "Sim, tenho experiência",
-    escova: "Sim, tenho experiência",
-    tempoArea: "Mais de 3 anos",
-    disponibilidadeLocal: "Sim",
-    disponibilidadeHorario: "Tenho disponibilidade para combinar",
-    relato: "15 anos de experiência em salão, sou cabeleira formada em colorimetria.",
-    skillScore: [3,3],
-    flag: "Número com 12 dígitos após o DDI (um dígito a mais que o padrão) — confirme antes de chamar no WhatsApp.",
-    tier: "terracotta"
-  }
-];
+// =========================================================
+// CONFIG — cole aqui o link publicado em CSV da planilha
+// (Arquivo > Compartilhar > Publicar na Web > formato CSV)
+// =========================================================
+const CONFIG = {
+  CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRws2eR27HNoa8zLPvkqzexP9GK92kcQMrqnDUxqUuQSjn5psgVE1Rl9d3PYc72Fmr4-PAAYK9qCUQL/pub?output=csv",
+  AUTO_REFRESH_SECONDS: 60
+};
+// =========================================================
 
-const colunas = [
-  { id: "novo", titulo: "Novo lead" },
-  { id: "contato", titulo: "Em contato" },
-  { id: "entrevista", titulo: "Entrevista" },
-  { id: "aprovado", titulo: "Aprovado" },
-  { id: "reprovado", titulo: "Reprovado" }
-];
-
-// estado em memória: id do candidato -> id da coluna
-const estado = {};
-candidatos.forEach(c => estado[c.id] = "novo");
+let filtroAtivo = "todos";
 
 const board = document.getElementById("board");
+const filtersEl = document.getElementById("filters");
 const overlay = document.getElementById("overlay");
 const modal = document.getElementById("modal");
+const statusText = document.getElementById("statusText");
+const countText = document.getElementById("countText");
+const footerText = document.getElementById("footerText");
+const refreshBtn = document.getElementById("refreshBtn");
+
+let candidatos = [];
+
+// ---------- normalização e regras de qualificação ----------
+
+function normalizar(str){
+  return (str || "").toString().trim().toLowerCase()
+    .replace(/_/g, " ")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function humanizar(str){
+  if(!str) return "";
+  const s = str.toString().trim().replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function scoreExperiencia(txt){
+  const t = normalizar(txt);
+  if(t.includes("ja trabalhei")) return 3;
+  if(t.includes("experiencia pratica")) return 2;
+  return 1;
+}
+
+function scoreTecnica(txt){
+  const t = normalizar(txt);
+  if(t.includes("sim, tenho experiencia") || t.includes("sim tenho experiencia")) return 3;
+  if(t.includes("basic")) return 2;
+  return 1;
+}
+
+function limparTelefone(raw){
+  let digits = (raw || "").toString().replace(/^p:/i, "").replace(/[^\d]/g, "");
+  return digits;
+}
+
+function analisarTelefone(raw){
+  const digitsRaw = limparTelefone(raw);
+  let comDDI = digitsRaw;
+  let ok = false;
+
+  if(digitsRaw.length === 11){
+    // veio sem o DDI (55) — completa assumindo Brasil
+    comDDI = "55" + digitsRaw;
+    ok = true;
+  } else if(digitsRaw.length === 13 && digitsRaw.startsWith("55")){
+    comDDI = digitsRaw;
+    ok = true;
+  }
+
+  const display = comDDI ? "+" + comDDI : "(sem telefone)";
+  return { digits: comDDI, display, ok };
+}
+
+function ehChapeco(cidade){
+  const c = normalizar(cidade);
+  return c.includes("chapeco");
+}
+
+function formatarData(raw){
+  if(!raw) return "";
+  const d = new Date(raw);
+  if(isNaN(d.getTime())) return raw;
+  return d.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+}
+
+function mapearLinha(row, idx){
+  const nome = (row["full_name"] || "Sem nome").trim();
+  const telefoneInfo = analisarTelefone(row["phone_number"]);
+  const cidade = (row["city"] || "não informada").trim();
+  const foraDeChapeco = !ehChapeco(cidade);
+
+  const experienciaAuxiliarRaw = row["você_possui_experiência_como_auxiliar_de_cabeleireiro?"] || "";
+  const lavagemRaw = row["você_sabe_lavar_cabelos_profissionalmente_em_salão?"] || "";
+  const escovaRaw = row["você_sabe_fazer_escova_em_diferentes_tipos_de_cabelo?"] || "";
+  const tempoAreaRaw = row["há_quanto_tempo_você_atua_ou_possui_experiência_na_área_da_beleza?"] || "";
+  const disponibilidadeLocalRaw = row["você_possui_disponibilidade_para_trabalhar_presencialmente_em_chapecó?"] || "";
+  const disponibilidadeHorarioRaw = row["qual_é_a_sua_disponibilidade_de_horário?"] || "";
+  const relato = (row["conte_brevemente_onde_adquiriu_experiência_com_lavagem_e_escovação_de_cabelos."] || "").trim();
+
+  const skillA = scoreExperiencia(experienciaAuxiliarRaw);
+  const skillB = Math.min(scoreTecnica(lavagemRaw), scoreTecnica(escovaRaw));
+
+  let flag = null;
+  if(!telefoneInfo.ok){
+    flag = `Telefone com ${telefoneInfo.digits.length} dígitos (esperado 13 com DDI, ex: 5549999998888) — confirme antes de chamar no WhatsApp.`;
+  } else if(foraDeChapeco){
+    flag = `Mora em ${cidade}, fora do raio configurado no anúncio (00 Chapecó 25KM) — confirme antes de avançar.`;
+  }
+
+  let tier = "lilac";
+  if(flag) tier = "terracotta";
+  else if(skillA === 3 && skillB === 3) tier = "lagoon";
+
+  return {
+    id: row["id"] || `row-${idx}`,
+    nome,
+    data: formatarData(row["created_time"]),
+    dataRaw: row["created_time"] || "",
+    telefoneDisplay: telefoneInfo.display,
+    telefoneWa: telefoneInfo.digits,
+    cidade,
+    foraDeChapeco,
+    experienciaAuxiliar: humanizar(experienciaAuxiliarRaw),
+    lavagem: humanizar(lavagemRaw),
+    escova: humanizar(escovaRaw),
+    tempoArea: humanizar(tempoAreaRaw),
+    disponibilidadeLocal: humanizar(disponibilidadeLocalRaw),
+    disponibilidadeHorario: humanizar(disponibilidadeHorarioRaw),
+    relato,
+    skillScore: [skillA, skillB],
+    flag,
+    tier
+  };
+}
+
+// ---------- busca e parse do CSV ----------
+
+async function carregarCandidatos(){
+  if(!CONFIG.CSV_URL || CONFIG.CSV_URL.startsWith("COLE_AQUI")){
+    board.innerHTML = `<p class="board-msg error">⚠ Cole o link publicado em CSV da planilha na constante <code>CONFIG.CSV_URL</code>, no topo do &lt;script&gt;.</p>`;
+    statusText.textContent = "Configuração pendente";
+    return;
+  }
+
+  statusText.textContent = "Buscando leads…";
+  try{
+    const resp = await fetch(CONFIG.CSV_URL + (CONFIG.CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now());
+    if(!resp.ok) throw new Error("HTTP " + resp.status);
+    const csvText = await resp.text();
+
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+    if(parsed.errors && parsed.errors.length){
+      console.warn("Avisos ao ler CSV:", parsed.errors);
+    }
+
+    candidatos = parsed.data.map(mapearLinha).sort((a,b) => new Date(b.dataRaw) - new Date(a.dataRaw));
+
+    statusText.textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+    countText.innerHTML = `<b>${candidatos.length}</b> candidatos`;
+    renderBoard();
+  }catch(err){
+    console.error(err);
+    statusText.textContent = "Erro ao buscar a planilha";
+    board.innerHTML = `<p class="board-msg error">⚠ Não consegui buscar os leads agora. Confira se o link CSV ainda está publicado e acessível, e clique em "Atualizar agora".<br><small>${err.message}</small></p>`;
+  }
+}
+
+// ---------- render ----------
 
 function skillDots(score, max){
   let dots = "";
@@ -580,98 +552,85 @@ function skillDots(score, max){
 
 function tagsFor(c){
   let tags = "";
-  tags += `<span class="tag">${c.tempoArea}</span>`;
+  if(c.tempoArea) tags += `<span class="tag">${c.tempoArea}</span>`;
   if(c.foraDeChapeco){
     tags += `<span class="tag bad">⚠ Fora de Chapecó</span>`;
-  }
-  if(c.flag && !c.foraDeChapeco){
+  } else if(c.flag){
     tags += `<span class="tag bad">⚠ Verificar telefone</span>`;
   }
   return tags;
 }
 
+function aplicarFiltro(lista){
+  if(filtroAtivo === "atencao") return lista.filter(c => c.flag);
+  return lista;
+}
+
 function renderBoard(){
   board.innerHTML = "";
-  colunas.forEach(col => {
-    const items = candidatos.filter(c => estado[c.id] === col.id)
-      .sort((a,b) => a.id - b.id);
 
-    const colEl = document.createElement("div");
-    colEl.className = "column";
-    colEl.dataset.colId = col.id;
+  if(!candidatos.length){
+    board.innerHTML = `<p class="board-msg">Nenhum lead encontrado na planilha ainda.</p>`;
+    return;
+  }
 
-    colEl.innerHTML = `
-      <div class="column-head">
-        <h2>${col.titulo}</h2>
-        <span class="col-count">${items.length}</span>
+  const items = aplicarFiltro(candidatos);
+
+  if(!items.length){
+    board.innerHTML = `<p class="board-msg">Nenhum candidato nesse filtro.</p>`;
+    return;
+  }
+
+  items.forEach(c => {
+    const card = document.createElement("div");
+    card.className = `card tier-${c.tier}`;
+    card.dataset.id = c.id;
+    card.innerHTML = `
+      <p class="card-name">${c.nome}</p>
+      <div class="card-divider"></div>
+      <div class="card-grid">
+        <div>
+          <p class="field-label">Experiência</p>
+          <p class="field-value">${c.tempoArea || "—"}</p>
+        </div>
+        <div>
+          <p class="field-label">Cidade</p>
+          <p class="field-value">${c.cidade}</p>
+        </div>
+      </div>
+      <div class="card-tags">${tagsFor(c)}</div>
+      <div class="skill-dots">
+        ${skillDots(c.skillScore[0], 3)}
+        ${skillDots(c.skillScore[1], 3)}
+        <span class="skill-label">exp · técnica</span>
+      </div>
+      <div class="card-foot">
+        <span>${c.data ? c.data.split(" ")[0] : ""}</span>
+        <span>Ver detalhes →</span>
       </div>
     `;
 
-    items.forEach(c => {
-      const card = document.createElement("div");
-      card.className = `card tier-${c.tier}`;
-      card.draggable = true;
-      card.dataset.id = c.id;
-      card.innerHTML = `
-        <p class="card-name">${c.nome}</p>
-        <div class="card-divider"></div>
-        <div class="card-grid">
-          <div>
-            <p class="field-label">Experiência</p>
-            <p class="field-value">${c.tempoArea}</p>
-          </div>
-          <div>
-            <p class="field-label">Cidade</p>
-            <p class="field-value">${c.cidade}</p>
-          </div>
-        </div>
-        <div class="card-tags">${tagsFor(c)}</div>
-        <div class="skill-dots">
-          ${skillDots(c.skillScore[0], 3)}
-          ${skillDots(c.skillScore[1], 3)}
-          <span class="skill-label">exp · técnica</span>
-        </div>
-        <div class="card-foot">
-          <span>${c.data.split(" ")[0]}</span>
-          <span>Ver detalhes →</span>
-        </div>
-      `;
+    card.addEventListener("click", () => openModal(c.id));
 
-      card.addEventListener("click", () => openModal(c.id));
-
-      card.addEventListener("dragstart", e => {
-        card.classList.add("dragging");
-        e.dataTransfer.setData("text/plain", c.id);
-      });
-      card.addEventListener("dragend", () => card.classList.remove("dragging"));
-
-      colEl.appendChild(card);
-    });
-
-    colEl.addEventListener("dragover", e => {
-      e.preventDefault();
-      colEl.classList.add("dragover");
-    });
-    colEl.addEventListener("dragleave", () => colEl.classList.remove("dragover"));
-    colEl.addEventListener("drop", e => {
-      e.preventDefault();
-      colEl.classList.remove("dragover");
-      const id = parseInt(e.dataTransfer.getData("text/plain"), 10);
-      if(id){
-        estado[id] = col.id;
-        renderBoard();
-      }
-    });
-
-    board.appendChild(colEl);
+    board.appendChild(card);
   });
 }
 
+filtersEl.addEventListener("click", e => {
+  const btn = e.target.closest(".filter-btn");
+  if(!btn) return;
+  filtroAtivo = btn.dataset.filter;
+  [...filtersEl.children].forEach(b => b.classList.toggle("active", b === btn));
+  renderBoard();
+});
+
 function openModal(id){
-  const c = candidatos.find(x => x.id === id);
+  const c = candidatos.find(x => String(x.id) === String(id));
   if(!c) return;
 
-  const waMsg = encodeURIComponent(`Olá ${c.nome.split(" ")[0]}! Vi seu cadastro para a vaga de Auxiliar de Cabeleireiro em Chapecó e gostaria de conversar :)`);
+  const primeiroNome = c.nome.split(" ")[0];
+  const waMsg = encodeURIComponent(`Olá ${primeiroNome}! Vi seu cadastro para a vaga de Auxiliar de Cabeleireiro em Chapecó e gostaria de conversar :)`);
+  const temTelefone = c.telefoneWa && c.telefoneWa.length >= 10;
 
   modal.innerHTML = `
     <div class="modal-top tier-${c.tier}">
@@ -684,8 +643,10 @@ function openModal(id){
     <div class="modal-body">
       ${c.flag ? `<div class="flag-note">⚠ ${c.flag}</div>` : ""}
       <div class="contact-row">
-        <a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${c.telefoneWa}?text=${waMsg}">WhatsApp</a>
-        <a class="btn tel" href="tel:+${c.telefoneWa}">Ligar</a>
+        ${temTelefone ? `
+          <a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${c.telefoneWa}?text=${waMsg}">WhatsApp</a>
+          <a class="btn tel" href="tel:+${c.telefoneWa}">Ligar</a>
+        ` : `<span class="tag bad">⚠ Sem telefone válido</span>`}
       </div>
 
       <div class="qa">
@@ -698,35 +659,35 @@ function openModal(id){
       </div>
       <div class="qa">
         <p class="q">Possui experiência como auxiliar de cabeleireiro?</p>
-        <p class="a">${c.experienciaAuxiliar}</p>
+        <p class="a">${c.experienciaAuxiliar || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Sabe lavar cabelos profissionalmente em salão?</p>
-        <p class="a">${c.lavagem}</p>
+        <p class="a">${c.lavagem || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Sabe fazer escova em diferentes tipos de cabelo?</p>
-        <p class="a">${c.escova}</p>
+        <p class="a">${c.escova || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Há quanto tempo atua ou possui experiência na área da beleza?</p>
-        <p class="a">${c.tempoArea}</p>
+        <p class="a">${c.tempoArea || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Disponibilidade para trabalhar presencialmente em Chapecó?</p>
-        <p class="a">${c.disponibilidadeLocal}</p>
+        <p class="a">${c.disponibilidadeLocal || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Disponibilidade de horário</p>
-        <p class="a">${c.disponibilidadeHorario}</p>
+        <p class="a">${c.disponibilidadeHorario || "—"}</p>
       </div>
       <div class="qa">
         <p class="q">Conte brevemente onde adquiriu experiência com lavagem e escovação de cabelos</p>
-        <p class="a quote">"${c.relato}"</p>
+        <p class="a quote">"${c.relato || "—"}"</p>
       </div>
     </div>
     <div class="modal-foot">
-      <span>Lead recebido em ${c.data}</span>
+      <span>Lead recebido em ${c.data || "data desconhecida"}</span>
       <span>AD 01 · Instagram · Chapecó 25KM</span>
     </div>
   `;
@@ -749,7 +710,12 @@ overlay.addEventListener("click", e => {
   if(e.target === overlay) closeModal();
 });
 
-renderBoard();
+refreshBtn.addEventListener("click", carregarCandidatos);
+
+carregarCandidatos();
+if(CONFIG.AUTO_REFRESH_SECONDS > 0){
+  setInterval(carregarCandidatos, CONFIG.AUTO_REFRESH_SECONDS * 1000);
+}
 </script>
 
 </body>
