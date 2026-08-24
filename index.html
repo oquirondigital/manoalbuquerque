@@ -409,6 +409,16 @@ function humanizar(str){
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+const ORDEM_TIER = { lagoon: 0, lilac: 1, terracotta: 2 };
+
+function ordenarCandidatos(lista){
+  return lista.sort((a,b) => {
+    const t = ORDEM_TIER[a.tier] - ORDEM_TIER[b.tier];
+    if(t !== 0) return t;
+    return new Date(b.dataRaw) - new Date(a.dataRaw);
+  });
+}
+
 function scoreExperiencia(txt){
   const t = normalizar(txt);
   if(t.includes("ja trabalhei")) return 3;
@@ -528,7 +538,7 @@ async function carregarCandidatos(){
       console.warn("Avisos ao ler CSV:", parsed.errors);
     }
 
-    candidatos = parsed.data.map(mapearLinha).sort((a,b) => new Date(b.dataRaw) - new Date(a.dataRaw));
+    candidatos = ordenarCandidatos(parsed.data.map(mapearLinha));
 
     statusText.textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
     countText.innerHTML = `<b>${candidatos.length}</b> candidatos`;
@@ -628,8 +638,7 @@ function openModal(id){
   const c = candidatos.find(x => String(x.id) === String(id));
   if(!c) return;
 
-  const primeiroNome = c.nome.split(" ")[0];
-  const waMsg = encodeURIComponent(`Olá ${primeiroNome}! Vi seu cadastro para a vaga de Auxiliar de Cabeleireiro em Chapecó e gostaria de conversar :)`);
+  const waMsg = encodeURIComponent(`Olá ${c.nome}! Recebemos seu cadastro para a vaga de Auxiliar de Cabeleireiro em Chapecó, gostaríamos de conversar.`);
   const temTelefone = c.telefoneWa && c.telefoneWa.length >= 10;
 
   modal.innerHTML = `
