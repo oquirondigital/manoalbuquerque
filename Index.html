@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Candidatos · Auxiliar de Cabeleireiro · Chapecó</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  :root{
+    --lagoon: #0F3D3E;
+    --lagoon-ink: #0a2b2c;
+    --terracotta: #C65A3A;
+    --terracotta-ink: #9c4529;
+    --lilac: #9B8FBC;
+    --lilac-ink: #766a9a;
+    --cream: #F2E6D6;
+    --cream-deep: #e9d8c1;
+
+    --bg: var(--cream);
+    --surface: #fffaf2;
+    --ink: #1c2e2c;
+    --ink-soft: rgba(28,46,44,0.62);
+    --line: rgba(15,61,62,0.14);
+    --radius: 16px;
+    --shadow: 0 1px 1px rgba(15,20,20,0.04), 0 20px 36px -20px rgba(15,61,62,0.28);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(900px 560px at 92% -8%, rgba(155,143,188,0.30), transparent 60%),
+      radial-gradient(900px 620px at -6% 8%, rgba(15,61,62,0.16), transparent 55%),
+      radial-gradient(1000px 700px at 50% 115%, rgba(198,90,58,0.14), transparent 60%),
+      var(--bg);
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    padding: 40px clamp(16px, 4vw, 48px) 26px;
+    border-bottom: 1px solid var(--line);
+  }
+  .eyebrow{
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--terracotta-ink);
+    font-weight: 600;
+    margin: 0 0 12px;
+    display:flex; align-items:center; gap: 8px;
+  }
+  .eyebrow::before{
+    content:'';
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--terracotta);
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: clamp(30px, 4vw, 44px);
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    color: var(--lagoon);
+  }
+  .subhead{
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin: 0;
+    max-width: 62ch;
+    line-height: 1.55;
+  }
+  .meta-row{
+    display:flex; gap: 22px; flex-wrap: wrap;
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    align-items: center;
+  }
+  .meta-row span b{ color: var(--lagoon); font-weight: 700; }
+  .live-dot{
+    display:inline-flex; align-items:center; gap: 6px;
+  }
+  .live-dot .pulse{
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--lagoon);
+    box-shadow: 0 0 0 0 rgba(15,61,62,0.5);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(15,61,62,0.45); }
+    70%{ box-shadow: 0 0 0 7px rgba(15,61,62,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(15,61,62,0); }
+  }
+  .refresh-btn{
+    font-size: 12px; font-weight: 600;
+    background: #fff; color: var(--lagoon);
+    border: 1px solid var(--line);
+    padding: 5px 12px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .refresh-btn:hover{ border-color: var(--lagoon); }
+
+  /* ---------- Grid ---------- */
+  main{
+    padding: 24px clamp(16px, 4vw, 48px) 60px;
+  }
+  .filters{
+    display:flex; gap: 8px; flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .filter-btn{
+    font-size: 12.5px; font-weight: 600;
+    background: #fff; color: var(--ink-soft);
+    border: 1px solid var(--line);
+    padding: 6px 13px; border-radius: 20px;
+    cursor: pointer;
+  }
+  .filter-btn.active{
+    background: var(--lagoon); color: #fff; border-color: var(--lagoon);
+  }
+  .grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(272px, 1fr));
+    gap: 16px;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    border-radius: 14px;
+    padding: 16px 17px 15px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    color: #fff;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover{ transform: translateY(-2px) scale(1.01); }
+  .card.tier-lagoon{ background: var(--lagoon); }
+  .card.tier-terracotta{ background: var(--terracotta); }
+  .card.tier-lilac{ background: var(--lilac); }
+
+  .card-name{
+    font-family:'Fraunces', serif;
+    font-weight: 600;
+    font-size: 17px;
+    margin: 0 0 10px;
+    line-height: 1.25;
+  }
+  .card-divider{
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+    margin-bottom: 12px;
+  }
+  .card-grid{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 8px;
+    margin-bottom: 12px;
+  }
+  .card-grid .field-label{
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.72);
+    margin: 0 0 3px;
+    font-weight: 600;
+  }
+  .card-grid .field-value{
+    font-size: 13px;
+    margin: 0;
+    font-weight: 500;
+    color: #fff;
+  }
+
+  .card-tags{
+    display:flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 10px;
+  }
+  .tag{
+    font-size: 10.5px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    line-height: 1.4;
+    white-space: nowrap;
+    font-weight: 600;
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+  .tag.bad{ background: #fff; color: var(--terracotta-ink); }
+
+  .skill-dots{ display:flex; gap: 6px; align-items:center; margin-bottom: 10px; }
+  .skill-dots .grp{ display:flex; gap: 3px; align-items:center; }
+  .dot{ width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.28); }
+  .dot.on{ background: #fff; }
+  .skill-label{ font-size: 9.5px; color: rgba(255,255,255,0.65); text-transform: uppercase; letter-spacing: .04em; }
+
+  .card-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    font-size: 11px;
+    color: rgba(255,255,255,0.75);
+    border-top: 1px solid rgba(255,255,255,0.22);
+    padding-top: 9px;
+  }
+
+  /* ---------- Empty / error states ---------- */
+  .board-msg{
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 40px 10px;
+    text-align: center;
+    width: 100%;
+  }
+  .board-msg.error{ color: var(--terracotta-ink); }
+  .board-msg a{ color: var(--lagoon); }
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position: fixed; inset: 0;
+    background: rgba(15,30,29,0.55);
+    backdrop-filter: blur(3px);
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 4vh 16px;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .overlay.open{ display: flex; }
+  .modal{
+    background: var(--surface);
+    border-radius: 20px;
+    max-width: 640px;
+    width: 100%;
+    padding: 0;
+    box-shadow: 0 30px 70px -20px rgba(10,20,20,0.45);
+    margin: auto 0;
+    overflow: hidden;
+  }
+  .modal-top{
+    padding: 28px 30px 24px;
+    display:flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    color: #fff;
+  }
+  .modal-top.tier-lagoon{ background: var(--lagoon); }
+  .modal-top.tier-terracotta{ background: var(--terracotta); }
+  .modal-top.tier-lilac{ background: var(--lilac); }
+  .modal-top h2{
+    font-family:'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 10px;
+  }
+  .modal-top .card-tags{ margin-bottom: 0; }
+  .close-btn{
+    border: none; background: rgba(255,255,255,0.2); color: #fff;
+    width: 34px; height: 34px; border-radius: 50%;
+    font-size: 16px; cursor: pointer; flex: 0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    transition: background .15s ease;
+  }
+  .close-btn:hover{ background: rgba(255,255,255,0.32); }
+  .modal-body{ padding: 24px 30px 8px; }
+  .contact-row{
+    display:flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .btn{
+    font-size: 13.5px; font-weight: 700;
+    padding: 10px 17px;
+    border-radius: 10px;
+    text-decoration: none;
+    display:inline-flex; align-items:center; gap: 7px;
+    border: 1px solid transparent;
+    transition: filter .15s ease, border-color .15s ease;
+  }
+  .btn.whatsapp{ background: var(--lagoon); color: #fff; }
+  .btn.whatsapp:hover{ filter: brightness(1.15); }
+  .btn.tel{ background: #fff; color: var(--lagoon); border-color: var(--line); }
+  .btn.tel:hover{ border-color: var(--lagoon); }
+
+  .qa{ margin-bottom: 17px; }
+  .qa .q{
+    font-size: 11px;
+    color: var(--terracotta-ink);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-weight: 700;
+    margin: 0 0 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  .qa .a{
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--ink);
+  }
+  .qa .a.quote{
+    background: var(--cream);
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-style: italic;
+    border-left: 3px solid var(--terracotta);
+    color: var(--ink);
+  }
+  .modal-foot{
+    padding: 16px 30px 28px;
+    display:flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--line);
+    margin-top: 10px;
+  }
+  .flag-note{
+    background: var(--cream);
+    color: var(--terracotta-ink);
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 18px;
+    font-weight: 500;
+    border: 1px solid rgba(198,90,58,0.25);
+  }
+
+  footer{
+    padding: 20px clamp(16px, 4vw, 48px) 34px;
+    font-size: 11px;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media (max-width: 640px){
+    .board{ gap: 12px; }
+    .column{ min-width: 78vw; max-width: 78vw; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">Oquíron Digital · Mano Albuquerque [Leads]</p>
+  <h1>Vaga — Auxiliar de Cabeleireiro</h1>
+  <p class="subhead">Candidatos recebidos via formulário de leads no Instagram, anúncio "AD 01 – Auxiliar de Cabeleireiro", segmentação 00 Chapecó 25KM. Clique em um card para ver todas as respostas.</p>
+  <div class="meta-row">
+    <span class="live-dot"><span class="pulse"></span> <span id="statusText">Conectando à planilha…</span></span>
+    <span id="countText"></span>
+    <button class="refresh-btn" id="refreshBtn">↻ Atualizar agora</button>
+  </div>
+</header>
+
+<main>
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="todos">Todos</button>
+    <button class="filter-btn" data-filter="atencao">Precisam de atenção</button>
+  </div>
+  <div class="grid" id="board"></div>
+</main>
+
+<footer id="footerText">Página só para visualização — os leads são carregados direto da planilha, sem edição por aqui.</footer>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+// =========================================================
+// CONFIG — cole aqui o link publicado em CSV da planilha
+// (Arquivo > Compartilhar > Publicar na Web > formato CSV)
+// =========================================================
+const CONFIG = {
+  CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRws2eR27HNoa8zLPvkqzexP9GK92kcQMrqnDUxqUuQSjn5psgVE1Rl9d3PYc72Fmr4-PAAYK9qCUQL/pub?output=csv",
+  AUTO_REFRESH_SECONDS: 60
+};
+// =========================================================
+
+let filtroAtivo = "todos";
+
+const board = document.getElementById("board");
+const filtersEl = document.getElementById("filters");
+const overlay = document.getElementById("overlay");
+const modal = document.getElementById("modal");
+const statusText = document.getElementById("statusText");
+const countText = document.getElementById("countText");
+const footerText = document.getElementById("footerText");
+const refreshBtn = document.getElementById("refreshBtn");
+
+let candidatos = [];
+
+// ---------- normalização e regras de qualificação ----------
+
+function normalizar(str){
+  return (str || "").toString().trim().toLowerCase()
+    .replace(/_/g, " ")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function humanizar(str){
+  if(!str) return "";
+  const s = str.toString().trim().replace(/_/g, " ");
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function scoreExperiencia(txt){
+  const t = normalizar(txt);
+  if(t.includes("ja trabalhei")) return 3;
+  if(t.includes("experiencia pratica")) return 2;
+  return 1;
+}
+
+function scoreTecnica(txt){
+  const t = normalizar(txt);
+  if(t.includes("sim, tenho experiencia") || t.includes("sim tenho experiencia")) return 3;
+  if(t.includes("basic")) return 2;
+  return 1;
+}
+
+function limparTelefone(raw){
+  let digits = (raw || "").toString().replace(/^p:/i, "").replace(/[^\d]/g, "");
+  return digits;
+}
+
+function analisarTelefone(raw){
+  const digitsRaw = limparTelefone(raw);
+  let comDDI = digitsRaw;
+  let ok = false;
+
+  if(digitsRaw.length === 11){
+    // veio sem o DDI (55) — completa assumindo Brasil
+    comDDI = "55" + digitsRaw;
+    ok = true;
+  } else if(digitsRaw.length === 13 && digitsRaw.startsWith("55")){
+    comDDI = digitsRaw;
+    ok = true;
+  }
+
+  const display = comDDI ? "+" + comDDI : "(sem telefone)";
+  return { digits: comDDI, display, ok };
+}
+
+function ehChapeco(cidade){
+  const c = normalizar(cidade);
+  return c.includes("chapeco");
+}
+
+function formatarData(raw){
+  if(!raw) return "";
+  const d = new Date(raw);
+  if(isNaN(d.getTime())) return raw;
+  return d.toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+}
+
+function mapearLinha(row, idx){
+  const nome = (row["full_name"] || "Sem nome").trim();
+  const telefoneInfo = analisarTelefone(row["phone_number"]);
+  const cidade = (row["city"] || "não informada").trim();
+  const foraDeChapeco = !ehChapeco(cidade);
+
+  const experienciaAuxiliarRaw = row["você_possui_experiência_como_auxiliar_de_cabeleireiro?"] || "";
+  const lavagemRaw = row["você_sabe_lavar_cabelos_profissionalmente_em_salão?"] || "";
+  const escovaRaw = row["você_sabe_fazer_escova_em_diferentes_tipos_de_cabelo?"] || "";
+  const tempoAreaRaw = row["há_quanto_tempo_você_atua_ou_possui_experiência_na_área_da_beleza?"] || "";
+  const disponibilidadeLocalRaw = row["você_possui_disponibilidade_para_trabalhar_presencialmente_em_chapecó?"] || "";
+  const disponibilidadeHorarioRaw = row["qual_é_a_sua_disponibilidade_de_horário?"] || "";
+  const relato = (row["conte_brevemente_onde_adquiriu_experiência_com_lavagem_e_escovação_de_cabelos."] || "").trim();
+
+  const skillA = scoreExperiencia(experienciaAuxiliarRaw);
+  const skillB = Math.min(scoreTecnica(lavagemRaw), scoreTecnica(escovaRaw));
+
+  let flag = null;
+  if(!telefoneInfo.ok){
+    flag = `Telefone com ${telefoneInfo.digits.length} dígitos (esperado 13 com DDI, ex: 5549999998888) — confirme antes de chamar no WhatsApp.`;
+  } else if(foraDeChapeco){
+    flag = `Mora em ${cidade}, fora do raio configurado no anúncio (00 Chapecó 25KM) — confirme antes de avançar.`;
+  }
+
+  let tier = "lilac";
+  if(flag) tier = "terracotta";
+  else if(skillA === 3 && skillB === 3) tier = "lagoon";
+
+  return {
+    id: row["id"] || `row-${idx}`,
+    nome,
+    data: formatarData(row["created_time"]),
+    dataRaw: row["created_time"] || "",
+    telefoneDisplay: telefoneInfo.display,
+    telefoneWa: telefoneInfo.digits,
+    cidade,
+    foraDeChapeco,
+    experienciaAuxiliar: humanizar(experienciaAuxiliarRaw),
+    lavagem: humanizar(lavagemRaw),
+    escova: humanizar(escovaRaw),
+    tempoArea: humanizar(tempoAreaRaw),
+    disponibilidadeLocal: humanizar(disponibilidadeLocalRaw),
+    disponibilidadeHorario: humanizar(disponibilidadeHorarioRaw),
+    relato,
+    skillScore: [skillA, skillB],
+    flag,
+    tier
+  };
+}
+
+// ---------- busca e parse do CSV ----------
+
+async function carregarCandidatos(){
+  if(!CONFIG.CSV_URL || CONFIG.CSV_URL.startsWith("COLE_AQUI")){
+    board.innerHTML = `<p class="board-msg error">⚠ Cole o link publicado em CSV da planilha na constante <code>CONFIG.CSV_URL</code>, no topo do &lt;script&gt;.</p>`;
+    statusText.textContent = "Configuração pendente";
+    return;
+  }
+
+  statusText.textContent = "Buscando leads…";
+  try{
+    const resp = await fetch(CONFIG.CSV_URL + (CONFIG.CSV_URL.includes("?") ? "&" : "?") + "t=" + Date.now());
+    if(!resp.ok) throw new Error("HTTP " + resp.status);
+    const csvText = await resp.text();
+
+    const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+    if(parsed.errors && parsed.errors.length){
+      console.warn("Avisos ao ler CSV:", parsed.errors);
+    }
+
+    candidatos = parsed.data.map(mapearLinha).sort((a,b) => new Date(b.dataRaw) - new Date(a.dataRaw));
+
+    statusText.textContent = "Atualizado às " + new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+    countText.innerHTML = `<b>${candidatos.length}</b> candidatos`;
+    renderBoard();
+  }catch(err){
+    console.error(err);
+    statusText.textContent = "Erro ao buscar a planilha";
+    board.innerHTML = `<p class="board-msg error">⚠ Não consegui buscar os leads agora. Confira se o link CSV ainda está publicado e acessível, e clique em "Atualizar agora".<br><small>${err.message}</small></p>`;
+  }
+}
+
+// ---------- render ----------
+
+function skillDots(score, max){
+  let dots = "";
+  for(let i=0;i<max;i++){
+    dots += `<span class="dot ${i < score ? 'on' : ''}"></span>`;
+  }
+  return `<span class="grp">${dots}</span>`;
+}
+
+function tagsFor(c){
+  let tags = "";
+  if(c.tempoArea) tags += `<span class="tag">${c.tempoArea}</span>`;
+  if(c.foraDeChapeco){
+    tags += `<span class="tag bad">⚠ Fora de Chapecó</span>`;
+  } else if(c.flag){
+    tags += `<span class="tag bad">⚠ Verificar telefone</span>`;
+  }
+  return tags;
+}
+
+function aplicarFiltro(lista){
+  if(filtroAtivo === "atencao") return lista.filter(c => c.flag);
+  return lista;
+}
+
+function renderBoard(){
+  board.innerHTML = "";
+
+  if(!candidatos.length){
+    board.innerHTML = `<p class="board-msg">Nenhum lead encontrado na planilha ainda.</p>`;
+    return;
+  }
+
+  const items = aplicarFiltro(candidatos);
+
+  if(!items.length){
+    board.innerHTML = `<p class="board-msg">Nenhum candidato nesse filtro.</p>`;
+    return;
+  }
+
+  items.forEach(c => {
+    const card = document.createElement("div");
+    card.className = `card tier-${c.tier}`;
+    card.dataset.id = c.id;
+    card.innerHTML = `
+      <p class="card-name">${c.nome}</p>
+      <div class="card-divider"></div>
+      <div class="card-grid">
+        <div>
+          <p class="field-label">Experiência</p>
+          <p class="field-value">${c.tempoArea || "—"}</p>
+        </div>
+        <div>
+          <p class="field-label">Cidade</p>
+          <p class="field-value">${c.cidade}</p>
+        </div>
+      </div>
+      <div class="card-tags">${tagsFor(c)}</div>
+      <div class="skill-dots">
+        ${skillDots(c.skillScore[0], 3)}
+        ${skillDots(c.skillScore[1], 3)}
+        <span class="skill-label">exp · técnica</span>
+      </div>
+      <div class="card-foot">
+        <span>${c.data ? c.data.split(" ")[0] : ""}</span>
+        <span>Ver detalhes →</span>
+      </div>
+    `;
+
+    card.addEventListener("click", () => openModal(c.id));
+
+    board.appendChild(card);
+  });
+}
+
+filtersEl.addEventListener("click", e => {
+  const btn = e.target.closest(".filter-btn");
+  if(!btn) return;
+  filtroAtivo = btn.dataset.filter;
+  [...filtersEl.children].forEach(b => b.classList.toggle("active", b === btn));
+  renderBoard();
+});
+
+function openModal(id){
+  const c = candidatos.find(x => String(x.id) === String(id));
+  if(!c) return;
+
+  const primeiroNome = c.nome.split(" ")[0];
+  const waMsg = encodeURIComponent(`Olá ${primeiroNome}! Vi seu cadastro para a vaga de Auxiliar de Cabeleireiro em Chapecó e gostaria de conversar :)`);
+  const temTelefone = c.telefoneWa && c.telefoneWa.length >= 10;
+
+  modal.innerHTML = `
+    <div class="modal-top tier-${c.tier}">
+      <div>
+        <h2>${c.nome}</h2>
+        <div class="card-tags">${tagsFor(c)}</div>
+      </div>
+      <button class="close-btn" id="closeBtn" aria-label="Fechar">✕</button>
+    </div>
+    <div class="modal-body">
+      ${c.flag ? `<div class="flag-note">⚠ ${c.flag}</div>` : ""}
+      <div class="contact-row">
+        ${temTelefone ? `
+          <a class="btn whatsapp" target="_blank" rel="noopener" href="https://wa.me/${c.telefoneWa}?text=${waMsg}">WhatsApp</a>
+          <a class="btn tel" href="tel:+${c.telefoneWa}">Ligar</a>
+        ` : `<span class="tag bad">⚠ Sem telefone válido</span>`}
+      </div>
+
+      <div class="qa">
+        <p class="q">Telefone informado</p>
+        <p class="a">${c.telefoneDisplay}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Cidade</p>
+        <p class="a">${c.cidade}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Possui experiência como auxiliar de cabeleireiro?</p>
+        <p class="a">${c.experienciaAuxiliar || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Sabe lavar cabelos profissionalmente em salão?</p>
+        <p class="a">${c.lavagem || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Sabe fazer escova em diferentes tipos de cabelo?</p>
+        <p class="a">${c.escova || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Há quanto tempo atua ou possui experiência na área da beleza?</p>
+        <p class="a">${c.tempoArea || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Disponibilidade para trabalhar presencialmente em Chapecó?</p>
+        <p class="a">${c.disponibilidadeLocal || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Disponibilidade de horário</p>
+        <p class="a">${c.disponibilidadeHorario || "—"}</p>
+      </div>
+      <div class="qa">
+        <p class="q">Conte brevemente onde adquiriu experiência com lavagem e escovação de cabelos</p>
+        <p class="a quote">"${c.relato || "—"}"</p>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <span>Lead recebido em ${c.data || "data desconhecida"}</span>
+      <span>AD 01 · Instagram · Chapecó 25KM</span>
+    </div>
+  `;
+
+  document.getElementById("closeBtn").addEventListener("click", closeModal);
+  overlay.classList.add("open");
+  document.addEventListener("keydown", escClose);
+}
+
+function closeModal(){
+  overlay.classList.remove("open");
+  document.removeEventListener("keydown", escClose);
+}
+
+function escClose(e){
+  if(e.key === "Escape") closeModal();
+}
+
+overlay.addEventListener("click", e => {
+  if(e.target === overlay) closeModal();
+});
+
+refreshBtn.addEventListener("click", carregarCandidatos);
+
+carregarCandidatos();
+if(CONFIG.AUTO_REFRESH_SECONDS > 0){
+  setInterval(carregarCandidatos, CONFIG.AUTO_REFRESH_SECONDS * 1000);
+}
+</script>
+
+</body>
+</html>
